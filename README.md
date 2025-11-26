@@ -12,11 +12,9 @@ A Python web scraping bot that finds the best promotions for PC components (DDR5
 
 ## Supported Retailers
 
-- **Amazon** (Germany, France, Spain, Italy, UK)
-- **PCComponentes** (Spain)
-- **LDLC** (France)
-- **Alternate** (Germany)
-- **Mindfactory** (Germany)
+- **Amazon** (Germany, France, Spain, Italy, UK) ✅
+
+**Note**: Other European retailers (PCComponentes, LDLC, Alternate, Mindfactory) use JavaScript + anti-bot protections that make scraping unreliable. Amazon provides excellent coverage across 5 European markets.
 
 ## Installation
 

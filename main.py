@@ -17,7 +17,8 @@ from utils.data_handler import (
     get_best_deals,
     filter_by_category,
     filter_in_stock,
-    get_price_statistics
+    get_price_statistics,
+    generate_markdown_report,
 )
 import config
 
@@ -102,13 +103,14 @@ def print_summary(products: List[Product]):
         print(f"  Price range: €{stats['min_price']:.2f} - €{stats['max_price']:.2f}")
         print(f"  Average: €{stats['avg_price']:.2f}")
     
-    # Best deals
+    # Best deals by category
     print("\n" + "-"*80)
-    print("TOP 5 DEALS")
+    print("TOP 5 DDR5 RAM DEALS")
     print("-"*80)
     
-    best_deals = get_best_deals(in_stock, top_n=5)
-    for i, product in enumerate(best_deals, 1):
+    ddr5_in_stock = filter_by_category(in_stock, 'DDR5 RAM')
+    best_ddr5 = get_best_deals(ddr5_in_stock, top_n=5)
+    for i, product in enumerate(best_ddr5, 1):
         discount_info = ""
         if product.discount_percentage:
             discount_info = f" (-{product.discount_percentage}%, save €{product.savings:.2f})"
@@ -116,7 +118,23 @@ def print_summary(products: List[Product]):
         print(f"\n{i}. {product.name[:60]}...")
         print(f"   Retailer: {product.retailer}")
         print(f"   Price: €{product.price:.2f}{discount_info}")
-        print(f"   URL: {product.url[:70]}...")
+        print(f"   URL: {product.url}")
+    
+    print("\n" + "-"*80)
+    print("TOP 5 GRAPHICS CARD DEALS")
+    print("-"*80)
+    
+    gpu_in_stock = filter_by_category(in_stock, 'Graphics Card')
+    best_gpu = get_best_deals(gpu_in_stock, top_n=5)
+    for i, product in enumerate(best_gpu, 1):
+        discount_info = ""
+        if product.discount_percentage:
+            discount_info = f" (-{product.discount_percentage}%, save €{product.savings:.2f})"
+        
+        print(f"\n{i}. {product.name[:60]}...")
+        print(f"   Retailer: {product.retailer}")
+        print(f"   Price: €{product.price:.2f}{discount_info}")
+        print(f"   URL: {product.url}")
 
 
 def main():
@@ -145,6 +163,11 @@ def main():
         action='store_true',
         help='Skip printing summary'
     )
+    parser.add_argument(
+        '--grouped-report',
+        action='store_true',
+        help='Generate grouped Markdown report (by GPU series/VRAM and RAM capacity)'
+    )
     
     args = parser.parse_args()
     
@@ -167,6 +190,10 @@ def main():
     if args.output in ['csv', 'both']:
         csv_path = save_products_csv(products)
         logging.info(f"Saved CSV results to: {csv_path}")
+    
+    if args.grouped_report:
+        report_path = generate_markdown_report(products)
+        logging.info(f"Saved grouped report to: {report_path}")
     
     # Print summary
     if not args.no_summary:
