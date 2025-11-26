@@ -43,6 +43,27 @@ class AmazonScraper(BaseScraper):
                     continue
         return 0.0
     
+    def _extract_original_price(self, card) -> float:
+        """Extract original/recommended price (crossed out price) if available."""
+        # Try different selectors for original price
+        original_selectors = [
+            '.a-price.a-text-price .a-offscreen',  # Recommended price
+            'span.a-price.a-text-price span.a-offscreen',
+            '.a-text-strike .a-offscreen'
+        ]
+        
+        for selector in original_selectors:
+            orig_elem = card.select_one(selector)
+            if orig_elem:
+                price_text = orig_elem.get_text(strip=True)
+                price_text = re.sub(r'[^\d,.]', '', price_text)
+                price_text = price_text.replace(',', '.')
+                try:
+                    return float(price_text)
+                except ValueError:
+                    continue
+        return None
+    
     def scrape_ddr5_ram(self) -> List[Product]:
         """Scrape DDR5 RAM from Amazon."""
         products = []
@@ -98,6 +119,9 @@ class AmazonScraper(BaseScraper):
                     self.logger.debug(f"Skipping {name[:30]}: no valid price found")
                     continue
                 
+                # Extract original price if available (for deals)
+                original_price = self._extract_original_price(card)
+                
                 # Check stock
                 in_stock = 'Currently unavailable' not in card.get_text()
                 
@@ -106,7 +130,8 @@ class AmazonScraper(BaseScraper):
                     price=price,
                     url=url,
                     category='DDR5 RAM',
-                    in_stock=in_stock
+                    in_stock=in_stock,
+                    original_price=original_price
                 )
                 products.append(product)
                 
@@ -119,7 +144,8 @@ class AmazonScraper(BaseScraper):
     def scrape_graphics_cards(self) -> List[Product]:
         """Scrape graphics cards from Amazon."""
         products = []
-        search_url = f"{self.base_url}/s?k=RTX+4060+4070+4080+4090"
+        # Search for all RTX generations
+        search_url = f"{self.base_url}/s?k=RTX+3060+3070+3080+3090+4060+4070+4080+4090+5060+5070+5080+5090"
         
         soup = self.fetch_page(search_url)
         if not soup:
@@ -163,6 +189,9 @@ class AmazonScraper(BaseScraper):
                 if price == 0.0:
                     continue
                 
+                # Extract original price if available (for deals)
+                original_price = self._extract_original_price(card)
+                
                 # Check stock
                 in_stock = 'Currently unavailable' not in card.get_text()
                 
@@ -171,7 +200,8 @@ class AmazonScraper(BaseScraper):
                     price=price,
                     url=url,
                     category='Graphics Card',
-                    in_stock=in_stock
+                    in_stock=in_stock,
+                    original_price=original_price
                 )
                 products.append(product)
                 

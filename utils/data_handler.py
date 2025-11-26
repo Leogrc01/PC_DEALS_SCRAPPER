@@ -286,7 +286,10 @@ def generate_markdown_report(products: List[Product], filename: str | None = Non
                 lines.append("(none)\n")
             else:
                 for p in items:
-                    lines.append(f"- €{p.price:.2f} — {p.name} ({p.retailer}) — {p.url}")
+                    price_info = f"€{p.price:.2f}"
+                    if p.original_price and p.discount_percentage:
+                        price_info = f"~~€{p.original_price:.2f}~~ **€{p.price:.2f}** (-{p.discount_percentage}%)"
+                    lines.append(f"- {price_info} — {p.name} ({p.retailer}) — {p.url}")
             lines.append("")
     
     # RAM
@@ -300,7 +303,10 @@ def generate_markdown_report(products: List[Product], filename: str | None = Non
                 lines.append("(none)\n")
             else:
                 for p in items:
-                    lines.append(f"- €{p.price:.2f} — {p.name} ({p.retailer}) — {p.url}")
+                    price_info = f"€{p.price:.2f}"
+                    if p.original_price and p.discount_percentage:
+                        price_info = f"~~€{p.original_price:.2f}~~ **€{p.price:.2f}** (-{p.discount_percentage}%)"
+                    lines.append(f"- {price_info} — {p.name} ({p.retailer}) — {p.url}")
             lines.append("")
     
     content = "\n".join(lines) + "\n"

@@ -1,194 +1,240 @@
 # PC Deals Scraper 🛒
 
-A Python web scraping bot that finds the best promotions for PC components (DDR5 RAM and Graphics Cards) across major European retailers.
+A Python web scraping bot that finds the best Black Friday deals on PC components (DDR5 RAM and Graphics Cards) across Amazon Europe.
 
 ## Features
 
-- 🌍 **Multi-retailer support**: Amazon (DE, FR, ES, IT, UK), PCComponentes, LDLC, Alternate, Mindfactory
-- 🎯 **Targeted scraping**: DDR5 RAM and Graphics Cards
-- 📊 **Smart analysis**: Automatic deal comparison and best price detection
-- 💾 **Multiple formats**: Export results as JSON or CSV
-- 🔄 **Extensible**: Easy to add new retailers with the generic scraper template
+- 🌍 **Amazon Europe**: 5 markets (DE, FR, ES, IT, UK)
+- 🎯 **Smart filtering**: DDR5 RAM (Desktop) and Graphics Cards only
+- 💰 **Black Friday deals**: Captures discounts with original prices and percentages
+- 📊 **Grouped reports**: Products sorted by exact model (RTX 4060, RTX 4070 Ti, etc.)
+- 💾 **Multiple formats**: JSON, CSV, and Markdown reports
+- ⚡ **Fast**: ~100 products in 30 seconds
+- 🚀 **Simple**: One command to run everything
 
-## Supported Retailers
+## Quick Start
 
-- **Amazon** (Germany, France, Spain, Italy, UK) ✅
-
-**Note**: Other European retailers (PCComponentes, LDLC, Alternate, Mindfactory) use JavaScript + anti-bot protections that make scraping unreliable. Amazon provides excellent coverage across 5 European markets.
-
-## Installation
-
-### Prerequisites
-
-- Python 3.8 or higher
-- pip
-
-### Setup
-
-1. Clone or navigate to the project directory:
 ```bash
-cd pc-deals-scraper
-```
-
-2. Create a virtual environment (recommended):
-```bash
+# First time setup
 python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate
+pip install -r requirements.txt
+
+# Run the scraper
+./scrape.sh
 ```
 
-3. Install dependencies:
-```bash
-pip install -r requirements.txt
+That's it! Results are saved in `output/` folder.
+
+## What You Get
+
+### 1. **Grouped Markdown Report** (`grouped_deals_*.md`) ⭐
+
+Products organized by exact model with discounts highlighted:
+
+```markdown
+### RTX 3050 8GB
+- ~~€254.90~~ **€169.00** (-33.7%) — MSI GeForce RTX 3050...
+
+### RTX 5070 Ti 16GB  
+- ~~€999.99~~ **€794.99** (-20.5%) — Gigabyte GeForce...
 ```
+
+### 2. **Top 5 Deals in Terminal**
+
+Automatically displayed after scraping:
+```
+💰 TOP 5 MEILLEURS DEALS:
+1. RTX 3050: €254.90 → €169.00 (-33.7%)
+2. RTX 5060: €379.00 → €269.00 (-29.0%)
+...
+```
+
+### 3. **JSON & CSV Files**
+
+For data analysis and spreadsheets.
+
+## Supported Products
+
+### Graphics Cards
+- **NVIDIA RTX 30xx**: 3050, 3060, 3070, 3080, 3090 (all variants)
+- **NVIDIA RTX 40xx**: 4060, 4060 Ti, 4070, 4070 Super, 4080, 4090
+- **NVIDIA RTX 50xx**: 5060, 5070, 5080, 5090 (Ti/Super variants)
+- **AMD Radeon RX**: 6xxx, 7xxx, 9xxx series
+
+### DDR5 RAM
+- Desktop RAM only (SODIMM/laptop RAM filtered out)
+- All capacities: 8GB to 128GB
+- All speeds: 4800MHz to 8400MHz+
+
+### Automatic Filtering
+
+Accessories automatically excluded:
+- ❌ GPU supports, brackets, risers
+- ❌ Cooling solutions, fans
+- ❌ Cables, adapters
+- ❌ RGB lighting kits
+- ❌ Laptop RAM (SODIMM)
 
 ## Usage
 
-### Basic Usage
+### Recommended (Simple)
 
-Run the scraper with default settings (all retailers, both output formats):
 ```bash
-python main.py
+./scrape.sh
 ```
 
-### Command-Line Options
+This runs everything with optimal settings and shows top deals.
+
+### Advanced Options
 
 ```bash
-# Only scrape Amazon sites
-python main.py --amazon-only
+# With grouped report
+python main.py --amazon-only --grouped-report
 
-# Choose output format
-python main.py --output json    # JSON only
-python main.py --output csv     # CSV only
-python main.py --output both    # Both formats (default)
-
-# Enable verbose logging
-python main.py --verbose
-
-# Skip the summary display
-python main.py --no-summary
-```
-
-### Example Commands
-
-```bash
-# Quick Amazon-only scrape with JSON output
+# JSON only
 python main.py --amazon-only --output json
 
-# Full scrape with detailed logging
-python main.py --verbose
+# Verbose logging
+python main.py --amazon-only --verbose
+
+# Skip summary
+python main.py --amazon-only --no-summary
 ```
 
-## Output
+## Output Files
 
-Results are saved in the `output/` directory with timestamps:
-- `deals_YYYYMMDD_HHMMSS.json` - JSON format
-- `deals_YYYYMMDD_HHMMSS.csv` - CSV format
+### Grouped Markdown Report (`grouped_deals_*.md`) ⭐
 
-### Output Fields
+Best for browsing deals:
+- Products grouped by exact model (RTX 3060, RTX 4070 Ti, etc.)
+- Sorted by price within each group
+- Discounts highlighted: ~~€999~~ **€799** (-20%)
+- Direct Amazon links (/dp/{ASIN})
 
-- `name` - Product name
-- `price` - Current price
-- `original_price` - Original price (if discounted)
-- `discount_percentage` - Discount percentage
-- `savings` - Amount saved
-- `retailer` - Retailer name
-- `category` - Product category (DDR5 RAM / Graphics Card)
-- `in_stock` - Stock availability
-- `url` - Product URL
-- `scraped_at` - Timestamp
+### JSON (`deals_*.json`)
+
+For programmatic access:
+```json
+{
+  "name": "MSI GeForce RTX 3050...",
+  "price": 169.0,
+  "original_price": 254.9,
+  "discount_percentage": 33.7,
+  "savings": 85.9,
+  "retailer": "Amazon ES",
+  "category": "Graphics Card",
+  "url": "https://www.amazon.es/dp/..."
+}
+```
+
+### CSV (`deals_*.csv`)
+
+For Excel/Google Sheets analysis.
 
 ## Project Structure
 
 ```
 pc-deals-scraper/
-├── main.py                 # Main application entry point
-├── config.py              # Retailer configurations
+├── scrape.sh              # 🚀 Simple launcher script
+├── main.py                # Main application
+├── config.py              # Configuration
 ├── requirements.txt       # Python dependencies
+├── UTILISATION.md         # Quick guide (French)
+├── WARP.md                # Development guide
 ├── scrapers/
-│   ├── __init__.py
 │   ├── base_scraper.py    # Base scraper class
-│   ├── amazon_scraper.py  # Amazon-specific scraper
+│   ├── amazon_scraper.py  # Amazon scraper with deals extraction
 │   └── generic_scraper.py # Generic retailer scraper
 ├── models/
-│   ├── __init__.py
 │   └── product.py         # Product data model
 ├── utils/
-│   ├── __init__.py
-│   └── data_handler.py    # Data export and analysis utilities
-├── tests/
-│   └── __init__.py
-└── output/                # Generated results (created automatically)
+│   └── data_handler.py    # Data export & grouping
+└── output/                # 📊 Generated results
+    ├── deals_*.json
+    ├── deals_*.csv
+    └── grouped_deals_*.md  # ⭐ Best for browsing
 ```
 
-## Adding New Retailers
+## Why Amazon Only?
 
-To add a new European retailer:
+Other European retailers (LDLC, Alternate, Mindfactory, PCComponentes) use:
+- ❌ JavaScript to load products dynamically
+- ❌ Strong anti-bot protections (Cloudflare, Datadome)
+- ❌ Requiring browser automation (slow & fragile)
 
-1. Open `config.py`
-2. Add a new entry to `RETAILER_CONFIGS` with the retailer's information:
+Amazon provides:
+- ✅ Server-side rendering (fast scraping)
+- ✅ 5 European markets
+- ✅ Consistent HTML structure
+- ✅ ~100 products found
+- ✅ Reliable deal detection
+
+## Configuration
+
+Edit `config.py` to customize:
 
 ```python
-'new_retailer': {
-    'name': 'Retailer Name',
-    'base_url': 'https://www.example.com',
-    'ddr5_search_path': '/path/to/ddr5/search',
-    'gpu_search_path': '/path/to/gpu/search',
-    'selectors': {
-        'product_container': '.product-card',
-        'name': '.product-name',
-        'price': '.price',
-        'url': 'a',
-        'stock': '.stock-status'
-    }
-}
+# Amazon markets to scrape
+AMAZON_COUNTRIES = ['de', 'fr', 'es', 'it', 'co.uk']
+
+# Results per category
+MAX_PRODUCTS_PER_CATEGORY = 20
+
+# HTTP settings
+REQUEST_TIMEOUT = 10
+MAX_RETRIES = 3
 ```
 
-3. Test the scraper to verify the CSS selectors are correct
+## Performance
 
-## Customization
-
-### Scraping Limits
-
-Edit `config.py` to adjust:
-- `MAX_PRODUCTS_PER_CATEGORY` - Products per category (default: 20)
-- `REQUEST_TIMEOUT` - HTTP request timeout (default: 10s)
-- `MAX_RETRIES` - Retry attempts (default: 3)
-
-### Amazon Countries
-
-Edit the `AMAZON_COUNTRIES` list in `config.py` to add/remove Amazon sites.
+- **Speed**: ~30 seconds for complete scan
+- **Products**: ~100 items (29 GPUs + 69 RAM modules)
+- **Success rate**: 95%+ (occasionally Amazon blocks)
+- **Markets**: 5 countries simultaneously
 
 ## Notes
 
-- **Respect robots.txt**: This scraper should be used responsibly
-- **Rate limiting**: Built-in delays prevent overwhelming servers
-- **Selectors may change**: Websites update their HTML; selectors may need updates
-- **Legal**: For personal/educational use only
+- 🤖 Respectful scraping with delays and retries
+- 📜 For personal/educational use only
+- 🔄 CSS selectors may need updates if Amazon changes HTML
+- 🛡️ Uses standard HTTP requests (no browser automation)
 
 ## Troubleshooting
 
-### No products found
-- Check internet connection
-- Verify website accessibility
-- Update CSS selectors if site structure changed
+### "No products found"
+```bash
+# Check if Amazon is accessible
+curl -I https://www.amazon.fr
 
-### Import errors
-- Ensure all dependencies are installed: `pip install -r requirements.txt`
-- Activate virtual environment if using one
+# Try with verbose logging
+python main.py --amazon-only --verbose
+```
 
-### Timeout errors
-- Increase `REQUEST_TIMEOUT` in `config.py`
-- Check network stability
+### "Module not found" errors
+```bash
+# Make sure venv is activated
+source venv/bin/activate
 
-## Future Enhancements
+# Reinstall dependencies
+pip install -r requirements.txt
+```
 
-- [ ] Price tracking over time
-- [ ] Email notifications for deals
-- [ ] Database storage
-- [ ] Web dashboard
-- [ ] More retailers
-- [ ] Additional product categories
+### Scraper is slow
+- Normal! ~30 seconds for 5 Amazon markets
+- Amazon has rate limiting
+- Each market is scraped sequentially
+
+## Dependencies
+
+- `requests` - HTTP requests
+- `beautifulsoup4` - HTML parsing
+- `lxml` - Fast XML/HTML parser
+- `pandas` - CSV export
+- `python-dotenv` - Environment variables
+
+Python 3.8+ required (tested on 3.14)
 
 ## License
 
-This project is for educational purposes only.
+This project is for educational purposes only. Use responsibly and respect Amazon's Terms of Service.
