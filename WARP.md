@@ -161,6 +161,5 @@ To add a European retailer:
 
 ## Dependency Management
 - Python 3.8+ required
-- Key dependencies: `requests`, `beautifulsoup4`, `pandas`, `selenium`
-- `selenium` is included but not currently used (reserved for JavaScript-heavy sites)
+- Key dependencies: `requests`, `beautifulsoup4`, `pandas`, `lxml`
 - Always use virtual environments to isolate dependencies
