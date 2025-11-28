@@ -75,6 +75,16 @@ class BaseScraper(ABC):
         """
         pass
     
+    @abstractmethod
+    def scrape_cpus(self) -> List[Product]:
+        """
+        Scrape CPU products.
+        
+        Returns:
+            List of Product objects
+        """
+        pass
+    
     def scrape_all(self) -> List[Product]:
         """
         Scrape all product categories.
@@ -93,6 +103,10 @@ class BaseScraper(ABC):
         # Scrape Graphics Cards
         self.logger.info("Scraping Graphics Cards...")
         products.extend(self.scrape_graphics_cards())
+        
+        # Scrape CPUs
+        self.logger.info("Scraping CPUs...")
+        products.extend(self.scrape_cpus())
         
         self.logger.info(f"Completed scrape for {self.retailer_name}. Found {len(products)} products")
         

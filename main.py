@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 PC Deals Scraper - Main Application
-Scrapes European retailers for the best deals on DDR5 RAM and Graphics Cards.
+Scrapes European retailers for the best deals on DDR5 RAM, Graphics Cards, and CPUs.
 """
 
 import argparse
@@ -90,6 +90,7 @@ def print_summary(products: List[Product]):
     # Category breakdown
     ddr5_products = filter_by_category(products, 'DDR5 RAM')
     gpu_products = filter_by_category(products, 'Graphics Card')
+    cpu_products = filter_by_category(products, 'CPU')
     
     print(f"\nDDR5 RAM: {len(ddr5_products)} products")
     if ddr5_products:
@@ -100,6 +101,12 @@ def print_summary(products: List[Product]):
     print(f"\nGraphics Cards: {len(gpu_products)} products")
     if gpu_products:
         stats = get_price_statistics(gpu_products)
+        print(f"  Price range: €{stats['min_price']:.2f} - €{stats['max_price']:.2f}")
+        print(f"  Average: €{stats['avg_price']:.2f}")
+    
+    print(f"\nCPUs: {len(cpu_products)} products")
+    if cpu_products:
+        stats = get_price_statistics(cpu_products)
         print(f"  Price range: €{stats['min_price']:.2f} - €{stats['max_price']:.2f}")
         print(f"  Average: €{stats['avg_price']:.2f}")
     
@@ -127,6 +134,22 @@ def print_summary(products: List[Product]):
     gpu_in_stock = filter_by_category(in_stock, 'Graphics Card')
     best_gpu = get_best_deals(gpu_in_stock, top_n=5)
     for i, product in enumerate(best_gpu, 1):
+        discount_info = ""
+        if product.discount_percentage:
+            discount_info = f" (-{product.discount_percentage}%, save €{product.savings:.2f})"
+        
+        print(f"\n{i}. {product.name[:60]}...")
+        print(f"   Retailer: {product.retailer}")
+        print(f"   Price: €{product.price:.2f}{discount_info}")
+        print(f"   URL: {product.url}")
+    
+    print("\n" + "-"*80)
+    print("TOP 5 CPU DEALS")
+    print("-"*80)
+    
+    cpu_in_stock = filter_by_category(in_stock, 'CPU')
+    best_cpu = get_best_deals(cpu_in_stock, top_n=5)
+    for i, product in enumerate(best_cpu, 1):
         discount_info = ""
         if product.discount_percentage:
             discount_info = f" (-{product.discount_percentage}%, save €{product.savings:.2f})"

@@ -173,6 +173,50 @@ def _categorize_gpu(name: str) -> str:
         return f"{model}"
     return "Other"
 
+def _categorize_cpu(name: str) -> str:
+    """Return CPU category by brand and series (e.g., 'Intel Core i9', 'AMD Ryzen 7')."""
+    s = name.upper()
+    
+    # Detect Intel processors
+    if 'INTEL' in s or 'CORE I' in s or 'XEON' in s:
+        # Extract Intel model
+        if 'I9' in s or 'CORE 9' in s:
+            if 'ULTRA 9' in s:
+                return 'Intel Ultra 9'
+            return 'Intel Core i9'
+        elif 'I7' in s or 'CORE 7' in s:
+            if 'ULTRA 7' in s:
+                return 'Intel Ultra 7'
+            return 'Intel Core i7'
+        elif 'I5' in s or 'CORE 5' in s:
+            if 'ULTRA 5' in s:
+                return 'Intel Ultra 5'
+            return 'Intel Core i5'
+        elif 'I3' in s or 'CORE 3' in s:
+            return 'Intel Core i3'
+        elif 'XEON' in s:
+            return 'Intel Xeon'
+        else:
+            return 'Intel Other'
+    
+    # Detect AMD processors
+    elif 'AMD' in s or 'RYZEN' in s or 'THREADRIPPER' in s:
+        # Extract AMD model
+        if 'RYZEN 9' in s or 'R9' in s:
+            return 'AMD Ryzen 9'
+        elif 'RYZEN 7' in s or 'R7' in s:
+            return 'AMD Ryzen 7'
+        elif 'RYZEN 5' in s or 'R5' in s:
+            return 'AMD Ryzen 5'
+        elif 'RYZEN 3' in s or 'R3' in s:
+            return 'AMD Ryzen 3'
+        elif 'THREADRIPPER' in s:
+            return 'AMD Threadripper'
+        else:
+            return 'AMD Other'
+    
+    return 'Unknown CPU'
+
 def _categorize_ram(name: str) -> str:
     """Return a RAM capacity category like '16GB', '32GB', etc."""
     s = name.lower()
@@ -212,6 +256,7 @@ def generate_markdown_report(products: List[Product], filename: str | None = Non
     # Partition products
     gpus = [p for p in products if p.category == 'Graphics Card']
     rams = [p for p in products if p.category == 'DDR5 RAM']
+    cpus = [p for p in products if p.category == 'CPU']
     
     # Build groups
     gpu_groups: Dict[str, List[Product]] = defaultdict(list)
@@ -222,10 +267,16 @@ def generate_markdown_report(products: List[Product], filename: str | None = Non
     for p in rams:
         ram_groups[_categorize_ram(p.name)].append(p)
     
+    cpu_groups: Dict[str, List[Product]] = defaultdict(list)
+    for p in cpus:
+        cpu_groups[_categorize_cpu(p.name)].append(p)
+    
     # Sort items within groups by price
     for grp in gpu_groups.values():
         grp.sort(key=lambda x: x.price)
     for grp in ram_groups.values():
+        grp.sort(key=lambda x: x.price)
+    for grp in cpu_groups.values():
         grp.sort(key=lambda x: x.price)
     
     # Order groups nicely
@@ -266,8 +317,40 @@ def generate_markdown_report(products: List[Product], filename: str | None = Non
                 pass
         return 9999
     
+    def _cpu_group_key(k: str) -> Tuple[int, int]:
+        # Sort by brand (Intel first, then AMD) and series level (i9/R9 first, then i7/R7, etc.)
+        brand_order = 0  # Intel
+        series_order = 999
+        
+        if 'AMD' in k:
+            brand_order = 1
+            if 'Ryzen 9' in k:
+                series_order = 0
+            elif 'Ryzen 7' in k:
+                series_order = 1
+            elif 'Ryzen 5' in k:
+                series_order = 2
+            elif 'Ryzen 3' in k:
+                series_order = 3
+            elif 'Threadripper' in k:
+                series_order = -1  # Threadripper first for AMD
+        elif 'Intel' in k:
+            if 'i9' in k or 'Ultra 9' in k:
+                series_order = 0
+            elif 'i7' in k or 'Ultra 7' in k:
+                series_order = 1
+            elif 'i5' in k or 'Ultra 5' in k:
+                series_order = 2
+            elif 'i3' in k:
+                series_order = 3
+            elif 'Xeon' in k:
+                series_order = -1  # Xeon first for Intel
+        
+        return (brand_order, series_order)
+    
     sorted_gpu_groups = sorted(gpu_groups.items(), key=lambda kv: _gpu_group_key(kv[0]))
     sorted_ram_groups = sorted(ram_groups.items(), key=lambda kv: _ram_group_key(kv[0]))
+    sorted_cpu_groups = sorted(cpu_groups.items(), key=lambda kv: _cpu_group_key(kv[0]))
     
     # Render markdown
     lines: List[str] = []
@@ -281,6 +364,23 @@ def generate_markdown_report(products: List[Product], filename: str | None = Non
         lines.append("No graphics cards found.\n")
     else:
         for group_name, items in sorted_gpu_groups:
+            lines.append(f"### {group_name}\n")
+            if not items:
+                lines.append("(none)\n")
+            else:
+                for p in items:
+                    price_info = f"€{p.price:.2f}"
+                    if p.original_price and p.discount_percentage:
+                        price_info = f"~~€{p.original_price:.2f}~~ **€{p.price:.2f}** (-{p.discount_percentage}%)"
+                    lines.append(f"- {price_info} — {p.name} ({p.retailer}) — {p.url}")
+            lines.append("")
+    
+    # CPUs
+    lines.append("## CPUs\n")
+    if not sorted_cpu_groups:
+        lines.append("No CPUs found.\n")
+    else:
+        for group_name, items in sorted_cpu_groups:
             lines.append(f"### {group_name}\n")
             if not items:
                 lines.append("(none)\n")

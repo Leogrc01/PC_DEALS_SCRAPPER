@@ -141,6 +141,78 @@ class AmazonScraper(BaseScraper):
         
         return products
     
+    def scrape_cpus(self) -> List[Product]:
+        """Scrape CPUs from Amazon."""
+        products = []
+        # Search for Intel and AMD CPUs
+        search_url = f"{self.base_url}/s?k=Intel+Core+i5+i7+i9+AMD+Ryzen+5+7+9"
+        
+        soup = self.fetch_page(search_url)
+        if not soup:
+            return products
+        
+        # Find product cards
+        product_cards = soup.select('[data-component-type="s-search-result"]')
+        
+        for card in product_cards[:20]:  # Limit to first 20 results
+            try:
+                # Skip sponsored products without ASIN
+                asin = card.get('data-asin', '')
+                if not asin:
+                    continue
+                
+                # Extract product name
+                name_elem = card.select_one('h2 span')
+                if not name_elem:
+                    continue
+                name = name_elem.get_text(strip=True)
+                
+                # Filter out accessories (coolers, thermal paste, etc.)
+                name_lower = name.lower()
+                excluded_keywords = ['cooler', 'ventirad', 'kühler', 'dissipatore',
+                                   'thermal paste', 'pâte thermique', 'wärmeleitpaste',
+                                   'fan', 'ventilateur', 'lüfter', 'ventola',
+                                   'motherboard', 'carte mère', 'mainboard', 'scheda madre',
+                                   'kit upgrade', 'bundle', 'pc complet', 'barebone']
+                if any(keyword in name_lower for keyword in excluded_keywords):
+                    self.logger.debug(f"Skipping {name[:30]}: accessory/non-CPU product")
+                    continue
+                
+                # Only keep products with CPU indicators
+                cpu_keywords = ['intel', 'amd', 'ryzen', 'core i', 'processor', 'processeur', 'prozessor', 'processore']
+                if not any(keyword in name_lower for keyword in cpu_keywords):
+                    continue
+                
+                # Build direct product URL from ASIN
+                url = f"{self.base_url}/dp/{asin}"
+                
+                # Extract price
+                price = self._extract_price(card)
+                if price == 0.0:
+                    continue
+                
+                # Extract original price if available (for deals)
+                original_price = self._extract_original_price(card)
+                
+                # Check stock
+                in_stock = 'Currently unavailable' not in card.get_text()
+                
+                product = self.create_product(
+                    name=name,
+                    price=price,
+                    url=url,
+                    category='CPU',
+                    in_stock=in_stock,
+                    original_price=original_price
+                )
+                products.append(product)
+                
+            except Exception as e:
+                self.logger.warning(f"Error parsing product: {e}")
+                continue
+        
+        return products
+    
     def scrape_graphics_cards(self) -> List[Product]:
         """Scrape graphics cards from Amazon."""
         products = []
