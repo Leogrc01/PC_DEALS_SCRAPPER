@@ -46,6 +46,43 @@ python main.py --amazon-only --grouped-report
 python main.py --amazon-only --output json --verbose
 ```
 
+### Monitoring Mode (RAM Availability Alerts)
+```bash
+# Start monitoring with default settings (check every 5 min)
+python monitor.py
+
+# Monitor with price limit (e.g., max 150€)
+python monitor.py --max-price 150
+
+# Custom check interval (e.g., every 2 minutes = 120 seconds)
+python monitor.py --interval 120
+
+# Minimum capacity filter (e.g., only 32GB+)
+python monitor.py --min-capacity 32
+
+# Disable sound notifications (visual only)
+python monitor.py --no-sound
+
+# Combined settings
+python monitor.py --max-price 200 --min-capacity 32 --interval 180
+
+# Reset notification cache (re-alert for all products)
+python monitor.py --reset-cache
+
+# Stop monitoring: Press Ctrl+C
+```
+
+**Monitoring Features:**
+- Continuous scanning of all Amazon EU sites for DDR5 RAM
+- macOS notifications (visual + sound) when RAM is in stock
+- Text-to-speech announcements for immediate attention
+- Price and capacity filtering
+- **Delivery date extraction and sorting** - products sorted by fastest delivery first
+- Multilingual delivery parsing (EN, FR, DE, ES, IT) - detects "tomorrow", "today", weekdays, specific dates
+- Smart deduplication (won't spam for same product)
+- Cache persists between runs (won't re-notify unless reset)
+- Ideal for shortage situations where RAM sells out quickly
+
 ### Testing
 This project currently doesn't have a test suite defined. When adding tests:
 - Place test files in the `tests/` directory
@@ -91,6 +128,7 @@ The codebase uses an **object-oriented scraper architecture** with a base class 
 **Product Model**:
 - Uses Python dataclasses with computed properties
 - Automatically calculates discount percentages and savings
+- Tracks delivery date and text for sorting and display
 - `to_dict()` method for serialization
 
 **Error Handling**:
@@ -149,6 +187,13 @@ To add a European retailer:
 - European format uses commas as decimal separators (€19,99)
 - Price extraction removes currency symbols and normalizes to float
 - Original prices (for discount calculation) are optional
+
+### Delivery Information
+- Automatically extracted from Amazon product cards
+- Supports multilingual formats: "tomorrow"/"demain"/"mañana"/"domani"/"morgen"
+- Parses weekdays (Monday/lundi/lunes/lunedì/Montag) and specific dates ("Dec 21"/"21 déc."/"21. Dez")
+- Products sorted by delivery date (fastest first) in monitoring mode
+- Falls back gracefully when delivery info is unavailable
 
 ### Output Files
 - Automatically saved to `output/` directory with timestamp format: `deals_YYYYMMDD_HHMMSS.{json,csv}`

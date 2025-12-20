@@ -78,28 +78,58 @@ Accessories automatically excluded:
 
 ## Usage
 
-### Recommended (Simple)
+### One-Time Scraping
 
 ```bash
+# Simple way
 ./scrape.sh
+
+# Manual with options
+python main.py --amazon-only --grouped-report
+python main.py --amazon-only --output json --verbose
 ```
 
-This runs everything with optimal settings and shows top deals.
+### 🔔 Monitoring Mode (RAM Availability Alerts)
 
-### Advanced Options
+**Perfect for RAM shortages!** Leave it running to get instant notifications when RAM is available.
 
 ```bash
-# With grouped report
-python main.py --amazon-only --grouped-report
+# Activate venv first
+source venv/bin/activate
 
-# JSON only
-python main.py --amazon-only --output json
+# Start monitoring (checks every 5 minutes)
+python monitor.py
 
-# Verbose logging
-python main.py --amazon-only --verbose
+# With price limit (max 150€)
+python monitor.py --max-price 150
 
-# Skip summary
-python main.py --amazon-only --no-summary
+# Only 32GB+ RAM, check every 2 minutes
+python monitor.py --min-capacity 32 --interval 120
+
+# Silent mode (visual notifications only)
+python monitor.py --no-sound
+
+# Stop with Ctrl+C
+```
+
+**What you get:**
+- 🔔 **macOS notifications** with sound when RAM is in stock
+- 🗣️ **Text-to-speech** announcements ("RAM disponible à 129 euros")
+- 🚚 **Delivery sorting**: products sorted by fastest delivery first (today → tomorrow → specific dates)
+- 🌍 **Multilingual parsing**: detects delivery dates in EN, FR, DE, ES, IT
+- 🎯 **Smart filtering**: price limit + capacity filter
+- 🚫 **No spam**: tracks notified products (won't alert twice)
+- 💾 **Persistent cache**: remembers between runs
+- 🔄 **Continuous scanning**: all Amazon EU sites every N minutes
+
+**Monitoring Options:**
+```
+--max-price PRICE      Maximum price in EUR (e.g., 150)
+--interval SECONDS     Check interval (default: 300 = 5 min)
+--min-capacity GB      Minimum RAM capacity (default: 16GB)
+--no-sound             Disable sound (visual only)
+--reset-cache          Re-alert for all products
+--verbose              Show detailed logs
 ```
 
 ## Output Files

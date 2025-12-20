@@ -17,6 +17,8 @@ class Product:
     in_stock: bool = True
     original_price: Optional[float] = None
     scraped_at: datetime = None
+    delivery_date: Optional[datetime] = None  # Estimated delivery date
+    delivery_text: Optional[str] = None  # Raw delivery text for display
     
     @property
     def discount_percentage(self) -> Optional[float]:
@@ -44,5 +46,7 @@ class Product:
             'original_price': self.original_price,
             'discount_percentage': self.discount_percentage,
             'savings': self.savings,
-            'scraped_at': self.scraped_at.isoformat() if self.scraped_at else None
+            'scraped_at': self.scraped_at.isoformat() if self.scraped_at else None,
+            'delivery_date': self.delivery_date.isoformat() if self.delivery_date else None,
+            'delivery_text': self.delivery_text
         }
